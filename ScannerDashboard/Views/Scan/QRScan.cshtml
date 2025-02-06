@@ -1,0 +1,90 @@
+﻿@{
+    ViewData["Title"] = "QR Code Scanner";
+}
+
+<h2>QR Code Scanner</h2>
+
+<video id="video" width="400" height="300" autoplay></video>
+<canvas id="canvas" hidden></canvas>
+<p>Hasil Scan: <span id="result">Belum ada hasil</span></p>
+
+<table id="scanTable" class="table table-striped" style="display: none;">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Scanned Text</th>
+            <th>Timestamp</th>
+        </tr>
+    </thead>
+    <tbody id="scanTableBody"></tbody>
+</table>
+
+<script src="/js/jsQR.js"></script>
+<script>
+    const video = document.getElementById("video");
+    const canvas = document.getElementById("canvas");
+    const context = canvas.getContext("2d");
+    const resultSpan = document.getElementById("result");
+    const scanTable = document.getElementById("scanTable");
+    const scanTableBody = document.getElementById("scanTableBody");
+
+    let lastScannedQR = "";  // Menyimpan QR yang terakhir dipindai
+    let scanning = true;      // Variabel untuk mengontrol status scanning
+
+    async function startScanner() {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+            video.srcObject = stream;
+            scanQRCode();
+        } catch (err) {
+            console.error("Akses kamera ditolak!", err);
+        }
+    }
+
+    function scanQRCode() {
+        if (!scanning) return;  // Jika sedang dalam jeda, hentikan scan sementara
+
+        requestAnimationFrame(scanQRCode);
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+        const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+        const code = jsQR(imageData.data, imageData.width, imageData.height);
+
+        if (code && code.data !== lastScannedQR) {
+            lastScannedQR = code.data;
+            resultSpan.textContent = lastScannedQR;
+            scanning = true;  // Hentikan scan sementara
+            fetchScanData(lastScannedQR);
+        }
+    }
+
+    async function fetchScanData(idqr) {
+        try {
+            const response = await fetch(`/Scan/GetScanQR?idqr=${idqr}`);
+            const data = await response.json();
+
+            if (data.length > 0) {
+                scanTableBody.innerHTML = "";
+                scanTable.style.display = "table";
+
+                data.forEach(scan => {
+                    const row = `<tr>
+                            <td>${scan.id}</td>
+                            <td>${scan.scannedText}</td>
+                            <td>${scan.scanTime}</td>
+                        </tr>`;
+                    scanTableBody.innerHTML += row;
+                });
+            } else {
+                scanTable.style.display = "none";
+            }
+        } catch (error) {
+            console.error("Gagal mengambil data", error);
+        }
+    }
+
+    startScanner();
+</script>
+
+

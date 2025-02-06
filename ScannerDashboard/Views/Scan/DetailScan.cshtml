@@ -1,0 +1,29 @@
+﻿@model List<ScannerDashboard.Models.ScanQR>
+
+@{
+    ViewData["Title"] = "Detail Scan";
+}
+
+<h2>Detail Scan - IDQR: @Model.FirstOrDefault()?.IDQR</h2>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Scanned Text</th>
+            <th>Timestamp</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var scan in Model)
+        {
+            <tr>
+                <td>@scan.Id</td>
+                <td>@scan.ScannedText</td>
+                <td>@scan.ScanTime</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<a href="@Url.Action("DaftarScan", "Scan")" class="btn btn-secondary">Kembali</a>

@@ -1,0 +1,41 @@
+﻿@model List<ScannerDashboard.Models.ScanQR>
+
+@{
+    ViewData["Title"] = "Daftar Scan QR";
+}
+
+<h2>Daftar Scan QR</h2>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>ID QRCode</th>
+            <th>Excel</th>
+            <th>Delete</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var scan in Model.DistinctBy(s => s.IDQR))  // Menampilkan hanya IDQR unik
+        {
+            <tr>
+                <td>
+                    <a href="@Url.Action("DetailScan", "Scan", new { idqr = scan.IDQR })">@scan.IDQR </a>
+                </td>
+                <td>
+                    <form method="post" action="@Url.Action("ConvertExcel", "Scan")" ;">
+                        <input type="hidden" name="idqr" value="@scan.IDQR" />
+                        <button type="submit" class="btn btn-primary">Download</button>
+                    </form>
+                </td>
+                <td>
+                    <form method="post" action="@Url.Action("DeleteIDQR", "Scan")" onsubmit="return confirm('Yakin ingin menghapus IDQR ini?');">
+                        <input type="hidden" name="idqr" value="@scan.IDQR" />
+                        <button type="submit" class="btn btn-danger">Delete</button>
+                    </form>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<a href="@Url.Action("Index", "Scan")" class="btn btn-secondary">Kembali</a>
